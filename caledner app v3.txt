@@ -1,0 +1,1105 @@
+import React, { useState, useRef, useEffect } from "react";
+
+const yogaTips = [
+  "Try 5 minutes of child's pose to unwind.",
+  "Do a gentle forward fold before bed.",
+  "Stretch your arms and back every morning.",
+  "Try a few rounds of sun salutations.",
+  "Practice deep breathing for 3 minutes.",
+];
+
+const friendList = [
+  { name: "Alex", goal: "Daily walk", events: ["Go for a walk", "Yoga class"] },
+  { name: "Jamie", goal: "Eat healthy", events: ["Meal prep", "Salad lunch"] },
+  { name: "Morgan", goal: "Stretch every evening", events: ["Stretching"] },
+];
+
+const backgroundThemes = [
+  {
+    name: "Ocean",
+    gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+  },
+  {
+    name: "Sunset",
+    gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+  },
+  {
+    name: "Forest",
+    gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+  },
+  {
+    name: "Mountain",
+    gradient: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+  },
+  {
+    name: "Space",
+    gradient: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+  },
+];
+
+function TabBar({ page, setPage }) {
+  const tabs = [
+    "Calendar",
+    "Habits",
+    "Overview",
+    "Recap",
+    "Friends",
+    "Connect",
+    "Settings",
+  ];
+  return (
+    <div
+      style={{
+        display: "flex",
+        gap: 8,
+        background: "#f1f2f6",
+        padding: 12,
+        borderRadius: 10,
+        marginBottom: 24,
+        fontWeight: 500,
+        flexWrap: "wrap",
+      }}
+    >
+      {tabs.map((t) => (
+        <button
+          key={t}
+          style={{
+            background: page === t ? "#2ecc40" : "#fff",
+            color: page === t ? "#fff" : "#333",
+            border: "none",
+            borderRadius: 6,
+            padding: "7px 20px",
+            cursor: "pointer",
+          }}
+          onClick={() => setPage(t)}
+        >
+          {t}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function MusicPlayer({ musicEnabled, lofiUrl, setLofiUrl }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef(null);
+
+  const toggleMusic = () => {
+    if (!musicEnabled || !lofiUrl) return;
+
+    if (!audioRef.current) {
+      audioRef.current = new Audio();
+      audioRef.current.loop = true;
+    }
+
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current.src = lofiUrl;
+      audioRef.current.play().catch((e) => console.log("Audio play failed"));
+      setIsPlaying(true);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        bottom: 20,
+        right: 20,
+        background: "#2c3e50",
+        borderRadius: 50,
+        padding: 15,
+        boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+        zIndex: 1000,
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+      }}
+    >
+      <button
+        onClick={toggleMusic}
+        disabled={!musicEnabled || !lofiUrl}
+        style={{
+          background: "none",
+          border: "none",
+          color: musicEnabled && lofiUrl ? "#fff" : "#666",
+          fontSize: 20,
+          cursor: musicEnabled && lofiUrl ? "pointer" : "not-allowed",
+        }}
+        title={
+          lofiUrl
+            ? isPlaying
+              ? "Stop LoFi"
+              : "Play LoFi"
+            : "Set LoFi URL in settings"
+        }
+      >
+        {isPlaying ? "🔇" : "🎵"}
+      </button>
+      {musicEnabled && (
+        <div style={{ color: "#fff", fontSize: 12 }}>
+          {isPlaying ? "LoFi" : "Quiet"}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SwipeScreen({
+  isVisible,
+  onClose,
+  habits,
+  goals,
+  selectedTheme,
+  progressBg,
+}) {
+  if (!isVisible) return null;
+
+  const completedHabits = habits.filter((h) => h.done).length;
+  const habitStreak = Math.floor(Math.random() * 15) + 1;
+
+  const backgroundStyle = progressBg
+    ? {
+        backgroundImage: `url(${progressBg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }
+    : { background: selectedTheme?.gradient || backgroundThemes[0].gradient };
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        ...backgroundStyle,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        color: "#fff",
+        zIndex: 2000,
+        textAlign: "center",
+      }}
+    >
+      <div
+        style={{
+          background: "rgba(0,0,0,0.6)",
+          borderRadius: 16,
+          padding: 32,
+          backdropFilter: "blur(10px)",
+        }}
+      >
+        <h2 style={{ marginBottom: 24 }}>Your Progress</h2>
+
+        <div style={{ marginBottom: 20 }}>
+          <h3>Current Goal: {goals.title || "Japan Trip"}</h3>
+          <div
+            style={{
+              background: "rgba(255,255,255,0.2)",
+              borderRadius: 20,
+              height: 8,
+              marginTop: 8,
+            }}
+          >
+            <div
+              style={{
+                background: "#2ecc40",
+                height: "100%",
+                borderRadius: 20,
+                width: `${goals.progress || 50}%`,
+              }}
+            ></div>
+          </div>
+          <p>
+            {goals.progress || 50}% of ${goals.target || "10,000"} saved!
+          </p>
+        </div>
+
+        <div style={{ marginBottom: 20 }}>
+          <h4>Habit Streak: {habitStreak} days 🔥</h4>
+          <p>Completed {completedHabits} habits today</p>
+        </div>
+
+        <button
+          onClick={onClose}
+          style={{
+            background: "rgba(255,255,255,0.2)",
+            border: "2px solid #fff",
+            color: "#fff",
+            borderRadius: 25,
+            padding: "10px 20px",
+            cursor: "pointer",
+            fontSize: 16,
+          }}
+        >
+          Continue
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function HabitTracker({ habits, setHabits }) {
+  const [text, setText] = useState("");
+  const [habitType, setHabitType] = useState("daily");
+
+  const addHabit = () => {
+    if (text.trim()) {
+      setHabits([...habits, { name: text, done: false, type: habitType }]);
+      setText("");
+    }
+  };
+
+  return (
+    <div
+      style={{
+        background: "#fff",
+        borderRadius: 12,
+        padding: 16,
+        boxShadow: "0 2px 8px #eee",
+        maxWidth: 600,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 16,
+        }}
+      >
+        <h2 style={{ fontWeight: 700 }}>Habit Tracker</h2>
+        <button
+          onClick={() => confirm("Reset all habits?") && setHabits([])}
+          style={{
+            background: "#e74c3c",
+            color: "#fff",
+            border: "none",
+            borderRadius: 6,
+            padding: "6px 12px",
+            cursor: "pointer",
+            fontSize: 12,
+          }}
+        >
+          Reset All
+        </button>
+      </div>
+
+      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+        <input
+          placeholder="Add a habit"
+          style={{
+            flex: 1,
+            padding: 8,
+            borderRadius: 5,
+            border: "1px solid #ccc",
+          }}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyPress={(e) => e.key === "Enter" && addHabit()}
+        />
+        <select
+          value={habitType}
+          onChange={(e) => setHabitType(e.target.value)}
+          style={{ padding: 8, borderRadius: 5, border: "1px solid #ccc" }}
+        >
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+        </select>
+        <button
+          style={{
+            padding: "8px 16px",
+            borderRadius: 5,
+            background: "#2ecc40",
+            color: "#fff",
+            border: "none",
+            cursor: "pointer",
+          }}
+          onClick={addHabit}
+        >
+          Add
+        </button>
+      </div>
+
+      {["daily", "weekly", "monthly"].map((type) => {
+        const typeHabits = habits.filter((h) => h.type === type);
+        const colors = {
+          daily: "#2ecc40",
+          weekly: "#3498db",
+          monthly: "#9b59b6",
+        };
+
+        return (
+          <div key={type} style={{ marginBottom: 20 }}>
+            <h3
+              style={{
+                color: colors[type],
+                marginBottom: 8,
+                textTransform: "capitalize",
+              }}
+            >
+              {type} Habits
+            </h3>
+            {typeHabits.length === 0 ? (
+              <p style={{ color: "#999", fontStyle: "italic" }}>
+                No {type} habits yet
+              </p>
+            ) : (
+              <ul style={{ padding: 0, listStyle: "none" }}>
+                {typeHabits.map((h, i) => (
+                  <li
+                    key={i}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      margin: "8px 0",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={h.done}
+                      onChange={() =>
+                        setHabits(
+                          habits.map((v) =>
+                            v === h ? { ...v, done: !v.done } : v
+                          )
+                        )
+                      }
+                    />
+                    <span
+                      style={{
+                        textDecoration: h.done ? "line-through" : "none",
+                        color: h.done ? "#aaa" : "#222",
+                      }}
+                    >
+                      {h.name}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function Calendar({ events, setEvents }) {
+  const [selectedDate, setSelectedDate] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const monthName = now.toLocaleString("default", { month: "long" });
+  const todayISO = new Date().toISOString().slice(0, 10);
+
+  const days = [];
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = `${year}-${String(month + 1).padStart(2, "0")}-${String(
+      d
+    ).padStart(2, "0")}`;
+    days.push(date);
+  }
+
+  const addEvent = (date) => {
+    const title = prompt("Event title?");
+    if (!title) return;
+
+    setSelectedDate(date);
+    setEvents((evts) => ({
+      ...evts,
+      [date]: [...(evts[date] || []), { title, description: "", image: null }],
+    }));
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file && selectedDate) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setEvents((evts) => {
+          const dateEvents = evts[selectedDate] || [];
+          const lastEvent = dateEvents[dateEvents.length - 1];
+          if (lastEvent) {
+            lastEvent.image = event.target.result;
+          }
+          return { ...evts };
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        background: "#fff",
+        borderRadius: 12,
+        padding: 16,
+        boxShadow: "0 2px 8px #eee",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 16,
+        }}
+      >
+        <h2 style={{ fontWeight: 700 }}>
+          {monthName} {year}
+        </h2>
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          style={{
+            background: "#3498db",
+            color: "#fff",
+            border: "none",
+            borderRadius: 6,
+            padding: "8px 12px",
+            cursor: "pointer",
+          }}
+        >
+          📷 Add Image to Last Event
+        </button>
+      </div>
+
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleImageUpload}
+        accept="image/*"
+        style={{ display: "none" }}
+      />
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(7,1fr)",
+          gap: 4,
+        }}
+      >
+        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+          <div
+            style={{ fontWeight: 600, textAlign: "center", padding: 8 }}
+            key={d}
+          >
+            {d}
+          </div>
+        ))}
+        {Array(new Date(year, month, 1).getDay())
+          .fill()
+          .map((_, i) => (
+            <div key={`empty-${i}`}></div>
+          ))}
+        {days.map((date) => (
+          <div
+            key={date}
+            style={{
+              border: "1px solid #f0f0f0",
+              borderRadius: 6,
+              minHeight: 80,
+              padding: 4,
+              cursor: "pointer",
+              background: date === todayISO ? "#e3f2fd" : "#fff",
+              position: "relative",
+            }}
+            onClick={() => addEvent(date)}
+          >
+            <div
+              style={{
+                fontWeight: date === todayISO ? 700 : 400,
+                color: date === todayISO ? "#3498db" : "#444",
+                marginBottom: 4,
+              }}
+            >
+              {parseInt(date.split("-")[2])}
+            </div>
+            {(events[date] || []).slice(0, 2).map((ev, i) => (
+              <div
+                key={i}
+                style={{
+                  fontSize: 11,
+                  background: "#f3f8ff",
+                  margin: "2px 0",
+                  borderRadius: 3,
+                  padding: "2px 4px",
+                  position: "relative",
+                }}
+              >
+                {ev.title}
+                {ev.image && (
+                  <img
+                    src={ev.image}
+                    alt="Event"
+                    style={{
+                      position: "absolute",
+                      top: -2,
+                      right: -2,
+                      width: 16,
+                      height: 16,
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      border: "1px solid #fff",
+                    }}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Settings({
+  musicEnabled,
+  setMusicEnabled,
+  lofiUrl,
+  setLofiUrl,
+  goals,
+  setGoals,
+  healthEnabled,
+  setHealthEnabled,
+  selectedTheme,
+  setSelectedTheme,
+  progressBg,
+  setProgressBg,
+  appBg,
+  setAppBg,
+}) {
+  const bgFileRef = useRef(null);
+  const progressFileRef = useRef(null);
+
+  const handleBgUpload = (e, type) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (type === "app") setAppBg(event.target.result);
+        else setProgressBg(event.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        background: "#fff",
+        borderRadius: 12,
+        padding: 24,
+        boxShadow: "0 2px 8px #eee",
+        maxWidth: 500,
+      }}
+    >
+      <h2 style={{ fontWeight: 700 }}>Settings</h2>
+
+      <div style={{ marginBottom: 24 }}>
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            cursor: "pointer",
+            marginBottom: 8,
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={musicEnabled}
+            onChange={(e) => setMusicEnabled(e.target.checked)}
+          />
+          Enable LoFi Background Music
+        </label>
+        <input
+          placeholder="YouTube/Audio URL for LoFi music"
+          style={{
+            width: "100%",
+            padding: 8,
+            borderRadius: 5,
+            border: "1px solid #ccc",
+          }}
+          value={lofiUrl || ""}
+          onChange={(e) => setLofiUrl(e.target.value)}
+        />
+        <small style={{ color: "#666" }}>
+          Tip: Use direct audio file URLs or YouTube embed URLs
+        </small>
+      </div>
+
+      <div style={{ marginBottom: 24 }}>
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            cursor: "pointer",
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={healthEnabled}
+            onChange={(e) => setHealthEnabled(e.target.checked)}
+          />
+          Enable Health Features
+        </label>
+      </div>
+
+      <div style={{ marginBottom: 24 }}>
+        <h3 style={{ marginBottom: 8 }}>Backgrounds</h3>
+        <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+          <button
+            onClick={() => bgFileRef.current?.click()}
+            style={{
+              background: "#3498db",
+              color: "#fff",
+              border: "none",
+              borderRadius: 6,
+              padding: "8px 12px",
+              cursor: "pointer",
+            }}
+          >
+            📱 App Background
+          </button>
+          <button
+            onClick={() => progressFileRef.current?.click()}
+            style={{
+              background: "#9b59b6",
+              color: "#fff",
+              border: "none",
+              borderRadius: 6,
+              padding: "8px 12px",
+              cursor: "pointer",
+            }}
+          >
+            🎯 Progress Background
+          </button>
+        </div>
+        <input
+          type="file"
+          ref={bgFileRef}
+          onChange={(e) => handleBgUpload(e, "app")}
+          accept="image/*"
+          style={{ display: "none" }}
+        />
+        <input
+          type="file"
+          ref={progressFileRef}
+          onChange={(e) => handleBgUpload(e, "progress")}
+          accept="image/*"
+          style={{ display: "none" }}
+        />
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))",
+            gap: 8,
+          }}
+        >
+          {backgroundThemes.map((theme, i) => (
+            <button
+              key={i}
+              onClick={() => setSelectedTheme(theme)}
+              style={{
+                background: theme.gradient,
+                border:
+                  selectedTheme?.name === theme.name
+                    ? "3px solid #333"
+                    : "1px solid #ccc",
+                borderRadius: 8,
+                padding: 8,
+                color: "#fff",
+                cursor: "pointer",
+                textShadow: "1px 1px 2px rgba(0,0,0,0.7)",
+                fontSize: 12,
+              }}
+            >
+              {theme.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h3 style={{ marginBottom: 8 }}>Goal Settings</h3>
+        <input
+          placeholder="Goal title"
+          style={{
+            width: "100%",
+            padding: 8,
+            borderRadius: 5,
+            border: "1px solid #ccc",
+            marginBottom: 8,
+          }}
+          value={goals.title || ""}
+          onChange={(e) =>
+            setGoals((prev) => ({ ...prev, title: e.target.value }))
+          }
+        />
+        <div style={{ display: "flex", gap: 8 }}>
+          <input
+            type="number"
+            placeholder="Target"
+            style={{
+              flex: 1,
+              padding: 8,
+              borderRadius: 5,
+              border: "1px solid #ccc",
+            }}
+            value={goals.target || ""}
+            onChange={(e) =>
+              setGoals((prev) => ({ ...prev, target: e.target.value }))
+            }
+          />
+          <input
+            type="number"
+            placeholder="Progress %"
+            min="0"
+            max="100"
+            style={{
+              flex: 1,
+              padding: 8,
+              borderRadius: 5,
+              border: "1px solid #ccc",
+            }}
+            value={goals.progress || ""}
+            onChange={(e) =>
+              setGoals((prev) => ({
+                ...prev,
+                progress: Math.min(100, Math.max(0, e.target.value)),
+              }))
+            }
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Overview({ events, habits, healthEnabled }) {
+  const allEvents = Object.entries(events).reduce(
+    (acc, [date, arr]) => acc.concat(arr.map((ev) => ({ ...ev, date }))),
+    []
+  );
+
+  return (
+    <div
+      style={{
+        background: "#fff",
+        borderRadius: 12,
+        padding: 24,
+        boxShadow: "0 2px 8px #eee",
+      }}
+    >
+      <h2 style={{ fontWeight: 700, marginBottom: 16 }}>Overview</h2>
+      <div style={{ marginBottom: 18 }}>
+        <strong>Events this month: {allEvents.length}</strong>
+      </div>
+      <div style={{ marginBottom: 18 }}>
+        <strong>
+          Habits completed: {habits.filter((h) => h.done).length} /{" "}
+          {habits.length}
+        </strong>
+      </div>
+      {healthEnabled && (
+        <div style={{ background: "#e8fff4", borderRadius: 8, padding: 12 }}>
+          <strong>Daily Wellness Tip:</strong>
+          <div style={{ marginTop: 5 }}>
+            {yogaTips[Math.floor(Math.random() * yogaTips.length)]}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Recap({ habits, healthEnabled }) {
+  const habitsDone = habits.filter((h) => h.done).length;
+  return (
+    <div
+      style={{
+        background: "#fff",
+        borderRadius: 12,
+        padding: 24,
+        boxShadow: "0 2px 8px #eee",
+        maxWidth: 480,
+      }}
+    >
+      <h2 style={{ fontWeight: 700 }}>Weekly Recap</h2>
+      <div style={{ margin: "18px 0" }}>
+        <div>
+          You finished <b>{habitsDone}</b> habit{habitsDone !== 1 ? "s" : ""}.
+        </div>
+      </div>
+      {healthEnabled && (
+        <div style={{ background: "#e8fff4", borderRadius: 8, padding: 12 }}>
+          <b>Yoga suggestion:</b>
+          <div style={{ marginTop: 5 }}>
+            {yogaTips[Math.floor(Math.random() * yogaTips.length)]}
+          </div>
+        </div>
+      )}
+      <div style={{ marginTop: 20, color: "#666" }}>
+        <b>Recommendation:</b>
+        <div>
+          {habitsDone === 0
+            ? "Try to focus on a small, simple habit this week."
+            : "Great job! Keep up your routines and consider inviting a friend for accountability."}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Friends({ friends }) {
+  return (
+    <div
+      style={{
+        background: "#fff",
+        borderRadius: 12,
+        padding: 24,
+        boxShadow: "0 2px 8px #eee",
+        maxWidth: 420,
+      }}
+    >
+      <h2 style={{ fontWeight: 700 }}>Friends</h2>
+      <ul style={{ padding: 0, listStyle: "none" }}>
+        {friends.length === 0 && <li>No friends yet. Add some on Connect!</li>}
+        {friends.map((f, i) => (
+          <li
+            key={i}
+            style={{
+              margin: "10px 0",
+              padding: 10,
+              background: "#f8f9fa",
+              borderRadius: 6,
+            }}
+          >
+            <b>{f.name}</b> — goal: <i>{f.goal}</i>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function Connect({ friends, setFriends }) {
+  const [msg, setMsg] = useState("");
+  const available = friendList.filter(
+    (f) => !friends.find((fr) => fr.name === f.name)
+  );
+
+  function addFriend(f) {
+    setFriends([...friends, f]);
+    setMsg(`Connected with ${f.name}!`);
+    setTimeout(() => setMsg(""), 2000);
+  }
+
+  return (
+    <div
+      style={{
+        background: "#fff",
+        borderRadius: 12,
+        padding: 24,
+        boxShadow: "0 2px 8px #eee",
+        maxWidth: 420,
+      }}
+    >
+      <h2 style={{ fontWeight: 700 }}>Connect</h2>
+      <div style={{ margin: "14px 0" }}>
+        Find an accountability buddy:
+        <ul style={{ padding: 0, listStyle: "none" }}>
+          {available.length === 0 && <li>All available buddies added!</li>}
+          {available.map((f, i) => (
+            <li
+              key={i}
+              style={{
+                margin: "8px 0",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: 8,
+                background: "#f8f9fa",
+                borderRadius: 6,
+              }}
+            >
+              <div>
+                <b>{f.name}</b> — goal: <i>{f.goal}</i>
+              </div>
+              <button
+                style={{
+                  marginLeft: "auto",
+                  background: "#2d9cdb",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 5,
+                  padding: "6px 12px",
+                  cursor: "pointer",
+                }}
+                onClick={() => addFriend(f)}
+              >
+                Connect
+              </button>
+            </li>
+          ))}
+        </ul>
+        {msg && (
+          <div style={{ color: "#27ae60", marginTop: 10, fontWeight: 500 }}>
+            {msg}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  const [page, setPage] = useState("Calendar");
+  const [events, setEvents] = useState({});
+  const [habits, setHabits] = useState([]);
+  const [friends, setFriends] = useState([]);
+  const [musicEnabled, setMusicEnabled] = useState(false);
+  const [lofiUrl, setLofiUrl] = useState("");
+  const [healthEnabled, setHealthEnabled] = useState(false);
+  const [goals, setGoals] = useState({
+    title: "Japan Trip",
+    target: "10000",
+    progress: 50,
+  });
+  const [selectedTheme, setSelectedTheme] = useState(backgroundThemes[0]);
+  const [showSwipeScreen, setShowSwipeScreen] = useState(false);
+  const [progressBg, setProgressBg] = useState(null);
+  const [appBg, setAppBg] = useState(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSwipeScreen(true), 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const appStyle = appBg
+    ? {
+        backgroundImage: `url(${appBg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }
+    : { background: "#f5f7fa" };
+
+  return (
+    <div
+      style={{
+        fontFamily: "system-ui,sans-serif",
+        minHeight: "100vh",
+        padding: 24,
+        ...appStyle,
+      }}
+    >
+      <div style={{ maxWidth: 1200, margin: "auto" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 16,
+          }}
+        >
+          <h1
+            style={{
+              margin: 0,
+              color: appBg ? "#fff" : "#2c3e50",
+              textShadow: appBg ? "2px 2px 4px rgba(0,0,0,0.8)" : "none",
+            }}
+          >
+            Wellness Tracker
+          </h1>
+          <button
+            onClick={() => setShowSwipeScreen(true)}
+            style={{
+              background: selectedTheme.gradient,
+              color: "#fff",
+              border: "none",
+              borderRadius: 20,
+              padding: "8px 16px",
+              cursor: "pointer",
+              fontSize: 14,
+            }}
+          >
+            🎯 Progress
+          </button>
+        </div>
+
+        <TabBar page={page} setPage={setPage} />
+
+        <div style={{ minHeight: 480 }}>
+          {page === "Calendar" && (
+            <Calendar events={events} setEvents={setEvents} />
+          )}
+          {page === "Habits" && (
+            <HabitTracker habits={habits} setHabits={setHabits} />
+          )}
+          {page === "Overview" && (
+            <Overview
+              events={events}
+              habits={habits}
+              healthEnabled={healthEnabled}
+            />
+          )}
+          {page === "Recap" && (
+            <Recap habits={habits} healthEnabled={healthEnabled} />
+          )}
+          {page === "Friends" && <Friends friends={friends} />}
+          {page === "Connect" && (
+            <Connect friends={friends} setFriends={setFriends} />
+          )}
+          {page === "Settings" && (
+            <Settings
+              musicEnabled={musicEnabled}
+              setMusicEnabled={setMusicEnabled}
+              lofiUrl={lofiUrl}
+              setLofiUrl={setLofiUrl}
+              goals={goals}
+              setGoals={setGoals}
+              healthEnabled={healthEnabled}
+              setHealthEnabled={setHealthEnabled}
+              selectedTheme={selectedTheme}
+              setSelectedTheme={setSelectedTheme}
+              progressBg={progressBg}
+              setProgressBg={setProgressBg}
+              appBg={appBg}
+              setAppBg={setAppBg}
+            />
+          )}
+        </div>
+      </div>
+
+      <MusicPlayer
+        musicEnabled={musicEnabled}
+        lofiUrl={lofiUrl}
+        setLofiUrl={setLofiUrl}
+      />
+
+      <SwipeScreen
+        isVisible={showSwipeScreen}
+        onClose={() => setShowSwipeScreen(false)}
+        habits={habits}
+        goals={goals}
+        selectedTheme={selectedTheme}
+        progressBg={progressBg}
+      />
+    </div>
+  );
+}
